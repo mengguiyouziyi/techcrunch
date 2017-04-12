@@ -26,7 +26,7 @@ COOKIES_ENABLES=False
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
 #302 Problem
-DUPEFILTER_CLASS = 'scrapy.dupefilters.BaseDupeFilter'
+# DUPEFILTER_CLASS = 'scrapy.dupefilters.BaseDupeFilter'
 
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
@@ -46,3 +46,5 @@ USER_AGENT_CHOICES = [
 ]
 
 LOG_STDOUT = True
+
+LOG_LEVEL = 'INFO'
