@@ -34,7 +34,7 @@ class FazSpider(CrawlSpider):
 
     def parse_page(self, response):
         # print(response.url)
-        with codecs.open('urlList.txt', 'ab', 'utf-8') as file:
+        with codecs.open('all_urlList.txt', 'ab', 'utf-8') as file:
             file.write(response.url + '\n')
         # item = CrawlerItem()
         # item['url'] = response.url.encode('utf-8')
