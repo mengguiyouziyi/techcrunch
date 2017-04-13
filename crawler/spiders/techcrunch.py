@@ -19,25 +19,13 @@ class FazSpider(CrawlSpider):
     http://techcrunch.cn/mobile/page/12/
     http://techcrunch.cn/tag/instagram/
     http://techcrunch.cn/2015/05/01/twitters-new-dedicated-food-account-could-help-broaden-appeal/
+    r'techcrunch\.cn\/(\w+\/)+$'
+    r'techcrunch\.cn\/\d{4}\/\d{2}\/\d{2}\/'
     '''
     rules = (
         Rule(
             LinkExtractor(
-                allow=(
-                    r'techcrunch\.cn\/(\w+\/)+$',
-                ),
-                deny=(
-                    r'techcrunch\.cn\/\d{4}\/\d{2}\/\d{2}\/',
-                ),
-            ),
-            follow=True
-        ),
-        Rule(
-            LinkExtractor(
-                allow=(r'techcrunch\.cn\/\d{4}\/\d{2}\/\d{2}\/'),
-                deny=(
-                    r'techcrunch\.cn\/(\w+\/)+$',
-                ),
+                allow=(r''),
             ),
             follow=True,
             callback='parse_page',
@@ -45,7 +33,7 @@ class FazSpider(CrawlSpider):
     )
 
     def parse_page(self, response):
-        print(response.url)
+        # print(response.url)
         with codecs.open('urlList.txt', 'ab', 'utf-8') as file:
             file.write(response.url + '\n')
         # item = CrawlerItem()
