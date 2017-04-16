@@ -28,7 +28,7 @@ class FazSpider(CrawlSpider):
             'Cache-Control': 'max-age=0',
             'Referer': 'https://www.google.com/',
         }
-        self.handle_httpstatus_list = [404, 500, 502, 503, 504, 400, 408]
+        self.handle_httpstatus_list = [404, 500, 502, 503, 504, 400, 408, 520]
 
     def start_requests(self):
         for url in self.urls:
@@ -46,6 +46,9 @@ class FazSpider(CrawlSpider):
         article_path = os.path.join(save_folder, article_doc)
         with codecs.open(article_path, 'wb', 'utf-8') as file:
             file.writelines(title + text)
+        url = os.path.join(save_folder, 'url.txt')
+        with codecs.open(url, 'wb', 'utf-8') as file:
+            file.writelines(response.url)
 
         url_en = 'https://techcrunch.com/%s/' % article_name
         headers = {
@@ -104,7 +107,11 @@ class FazSpider(CrawlSpider):
         # print('response==============搜索url：' + response.url)
         article_name = response.meta['article_name']
         reg = re.compile(r'"url":"(https://techcrunch\.com/\d{4}/\d{2}/\d{2}/[-\w]+/)"')
-        if len(re.search(reg, response.body_as_unicode()).groups()) == 0:
+        sear = re.search(reg, response.body_as_unicode())
+        if not sear:
+            print('%s》》》》申请json无返回值，放弃寻找此对应英文文章' % article_name)
+            pass
+        if len(sear.groups()) == 0:
             print('%s》》》》无搜索结果，放弃寻找此对应英文文章' % article_name)
             pass
         print('%s》》》》找到搜索结果并返回，待确认状态码是否正确' % article_name)
