@@ -12,7 +12,7 @@ import codecs
 
 class FazSpider(CrawlSpider):
     name = 'techcrunch'
-    rotate_user_agent = True
+    # rotate_user_agent = True
     allowed_domains = ['techcrunch.cn']
     start_urls = ['http://techcrunch.cn/']
     '''
