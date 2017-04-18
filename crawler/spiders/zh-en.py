@@ -9,6 +9,7 @@ import re
 
 class FazSpider(CrawlSpider):
     name = 'zh-en'
+    allowed_domains = ['techcrunch.cn', 'techcrunch.com']
     def __init__(self):
         # 读取中文文章url
         with codecs.open('cn_detail_url.txt', 'rb', 'utf-8') as file:
@@ -17,7 +18,7 @@ class FazSpider(CrawlSpider):
                 # 有中文的链接先不做处理
                 if '%' in line:
                     with codecs.open('zh_have.txt', 'ab', 'utf-8') as file:
-                        file.writelines(line + '\n')
+                        file.writelines(line)
                     pass
                 else:
                     self.url = line.strip()
@@ -35,16 +36,21 @@ class FazSpider(CrawlSpider):
         self.handle_httpstatus_list = [404, 500, 502, 503, 504, 400, 408, 520]
 
     def start_requests(self):
-        for url in self.urls:
-            yield scrapy.Request(url, headers=self.headers, callback=self.parse_zh)
+        for index, url in enumerate(self.urls):
+            request = scrapy.Request(url, headers=self.headers, callback=self.parse_zh)
+            request.meta['index'] = index
+            yield request
 
     def parse_zh(self, response):
         article_name = response.url.split('/')[-2]
-        print('%s 》》》》中文文章 》》》%s' % (article_name, response.url))
+        url_zh = response.url
+        index = response.meta['index']
+        print('%d 》》》中文文章 》》》%s' % (index, url_zh))
         title = response.xpath('//title/text()').extract()[0].strip().encode('utf-8').decode('utf-8')
-        text = ''.join([s.strip().encode('utf-8').decode('utf-8') for s in response.xpath('//div[@class="article-entry text"]//p//text()').extract()])
+        text_origin = response.xpath('//div[@class="article-entry text"]//text()').extract()
+        text = ''.join([s.strip().encode('utf-8').decode('utf-8') for s in text_origin])
         with codecs.open('zh.zh', 'ab', 'utf-8') as file:
-            file.writelines(title + '\n' + text)
+            file.writelines(str(index) + '）' + title + '\n' + text + '\n\n')
 
         # save_folder = "./download/%s/" % article_name
         # if not os.path.exists(save_folder):
@@ -75,22 +81,28 @@ class FazSpider(CrawlSpider):
             url_en = 'https://techcrunch.com/%s/' % article_name
         # 这里发送请求，但是有可能响应404或其他状态码
         request = scrapy.Request(url_en, headers=headers, callback=self.parse_en)
-        request.meta['article_name'] = article_name
+        request.meta['index'] = index
+        request.meta['url_zh'] = url_zh
         return request
 
     def parse_en(self, response):
-        article_name = response.meta['article_name']
+        url_zh = response.meta['url_zh']
+        index = response.meta['index']
+        status_code = response.status
         if response.status == 200:
-            print('%s》》》》状态码正确，直接解析' % article_name)
+            print('%d 》》》状态码正确，直接解析 》》》%s' % (index, url_zh))
             title = response.xpath('//title/text()').extract()[0].strip().encode('utf-8').decode('utf-8')
-            text = ''.join([s.strip().encode('utf-8').decode('utf-8') for s in response.xpath('//div[@class="article-entry text"]//p//text()').extract()])
+            text_origin = response.xpath('//div[@class="article-entry text"]//text()').extract()
+            text = ''.join([s.strip().encode('utf-8').decode('utf-8') for s in text_origin])
             with codecs.open('en.en', 'ab', 'utf-8') as file:
-                file.writelines(title + '\n' + text)
+                file.writelines(str(index) + '）' + title + '\n' + text + '\n\n')
         else:
             # 如果返回错误状态码，记录
-            print('%s 》》》》状态码错误，记录 》》》》%s' % (article_name, response.url))
-            with codecs.open('wrong_status.txt', 'ab', 'utf-8') as file:
-                file.writelines(response.url + '\n')
+            print('%d 》》》状态码错误，记录 》》》%s' % (index, url_zh))
+            with codecs.open('wrong_status1.txt', 'ab', 'utf-8') as file:
+                file.writelines(str(index) + '）status code：%s 》》》' % str(status_code) + url_zh + '\n')
+            with codecs.open('wrong_status2.txt', 'ab', 'utf-8') as file:
+                file.writelines(url_zh + '\n')
 
 
     #
