@@ -50,7 +50,7 @@ class FazSpider(CrawlSpider):
         text_origin = response.xpath('//div[@class="article-entry text"]//text()').extract()
         text = ''.join([s.strip().encode('utf-8').decode('utf-8') for s in text_origin])
         with codecs.open('zh.zh', 'ab', 'utf-8') as file:
-            file.writelines(str(index) + '）' + title + '\n' + text + '\n\n')
+            file.writelines(str(index) + '---' + title + '\n' + text + '\n\n')
 
         # save_folder = "./download/%s/" % article_name
         # if not os.path.exists(save_folder):
@@ -95,7 +95,7 @@ class FazSpider(CrawlSpider):
             text_origin = response.xpath('//div[@class="article-entry text"]//text()').extract()
             text = ''.join([s.strip().encode('utf-8').decode('utf-8') for s in text_origin])
             with codecs.open('en.en', 'ab', 'utf-8') as file:
-                file.writelines(str(index) + '）' + title + '\n' + text + '\n\n')
+                file.writelines(str(index) + '---' + title + '\n' + text + '\n\n')
         else:
             # 如果返回错误状态码，记录
             print('%d 》》》状态码错误，记录 》》》%s' % (index, url_zh))
