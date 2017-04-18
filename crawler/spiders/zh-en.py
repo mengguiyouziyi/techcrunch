@@ -3,9 +3,10 @@
 import scrapy
 from scrapy.spiders import CrawlSpider
 import codecs
-import os
-import os.path
-import re
+import time
+# import os
+# import os.path
+# import re
 
 class FazSpider(CrawlSpider):
     name = 'zh-en'
@@ -16,13 +17,13 @@ class FazSpider(CrawlSpider):
             self.urls = []
             for line in file.readlines():
                 # 有中文的链接先不做处理
-                if '%' in line:
-                    with codecs.open('zh_have.txt', 'ab', 'utf-8') as file:
-                        file.writelines(line)
-                    pass
-                else:
-                    self.url = line.strip()
-                    self.urls.append(self.url)
+                # if '%' in line:
+                #     with codecs.open('zh_have.txt', 'ab', 'utf-8') as file:
+                #         file.writelines(line)
+                #     pass
+                # else:
+                self.url = line.strip()
+                self.urls.append(self.url)
         self.headers = {
             'Host': 'techcrunch.cn',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -39,6 +40,7 @@ class FazSpider(CrawlSpider):
         for index, url in enumerate(self.urls):
             request = scrapy.Request(url, headers=self.headers, callback=self.parse_zh)
             request.meta['index'] = index
+            time.sleep(3)
             yield request
 
     def parse_zh(self, response):
@@ -46,9 +48,21 @@ class FazSpider(CrawlSpider):
         url_zh = response.url
         index = response.meta['index']
         print('%d 》》》中文文章 》》》%s' % (index, url_zh))
+
         title = response.xpath('//title/text()').extract()[0].strip().encode('utf-8').decode('utf-8')
-        text_origin = response.xpath('//div[@class="article-entry text"]//text()').extract()
+        text_origin = response.xpath('//div[@class="article-entry text"]//p//text()').extract()
         text = ''.join([s.strip().encode('utf-8').decode('utf-8') for s in text_origin])
+        # 所有的中文文章都写文件，但是不一定都有对应的，这部分需要剔除。
+        # 如何剔除呢？需要把二次请求的响应状态码传回来才能确认
+        # 或者不剔除，而是让英文也有这行
+        # 如果这个字符串数量==1，替换
+        # if text.count('( function() {') == 1:
+        #     index_1 = text.index('( function() {')
+        #     index_2 = text.index('} )();') + 6
+        #     text = text[:index_1] + text[index_2:]
+        # elif text.count('( function() {') > 1:
+        #     with codecs.open('en.en', 'ab', 'utf-8') as file:
+        #         file.writelines(str(index) + '---' + url_zh + '\n' + '' + '\n\n')
         with codecs.open('zh.zh', 'ab', 'utf-8') as file:
             file.writelines(str(index) + '---' + title + '\n' + text + '\n\n')
 
@@ -75,34 +89,44 @@ class FazSpider(CrawlSpider):
         }
         # 直接在底部寻找原文链接，找到直接获取，未找到则直接跳转
         url_ens = response.xpath('//div[@class="article-entry text"]//p//a/@href').extract()
-        if len(url_ens) != 0:
-            url_en = url_ens[0]
+        if '翻译：' in text:
+            url_en = url_ens[-1]
         else:
             url_en = 'https://techcrunch.com/%s/' % article_name
         # 这里发送请求，但是有可能响应404或其他状态码
         request = scrapy.Request(url_en, headers=headers, callback=self.parse_en)
         request.meta['index'] = index
         request.meta['url_zh'] = url_zh
-        return request
+        yield request
 
     def parse_en(self, response):
         url_zh = response.meta['url_zh']
         index = response.meta['index']
         status_code = response.status
-        if response.status == 200:
+        if response.status not in self.handle_httpstatus_list:
             print('%d 》》》状态码正确，直接解析 》》》%s' % (index, url_zh))
             title = response.xpath('//title/text()').extract()[0].strip().encode('utf-8').decode('utf-8')
-            text_origin = response.xpath('//div[@class="article-entry text"]//text()').extract()
+            text_origin = response.xpath('//div[@class="article-entry text"]//p//text()').extract()
             text = ''.join([s.strip().encode('utf-8').decode('utf-8') for s in text_origin])
+            # 如果这个字符串数量==1，替换
+            # if text.count('( function() {') == 1:
+            #     index_1 = text.index('( function() {')
+            #     index_2 = text.index('} )();') + 6
+            #     text = text[:index_1] + text[index_2:]
+            # elif text.count('( function() {') > 1:
+            #     with codecs.open('en.en', 'ab', 'utf-8') as file:
+            #         file.writelines(str(index) + '---' + url_zh + '\n' + '' + '\n\n')
             with codecs.open('en.en', 'ab', 'utf-8') as file:
                 file.writelines(str(index) + '---' + title + '\n' + text + '\n\n')
         else:
             # 如果返回错误状态码，记录
             print('%d 》》》状态码错误，记录 》》》%s' % (index, url_zh))
             with codecs.open('wrong_status1.txt', 'ab', 'utf-8') as file:
-                file.writelines(str(index) + '---status code:%s---' % str(status_code) + url_zh + '\n')
+                file.writelines(str(index) + '---statusCode:%s---' % str(status_code) + url_zh + '\n')
             with codecs.open('wrong_status2.txt', 'ab', 'utf-8') as file:
                 file.writelines(url_zh + '\n')
+            with codecs.open('en.en', 'ab', 'utf-8') as file:
+                file.writelines(str(index) + '---' + url_zh + '\n' + '' + '\n\n')
 
 
     #
