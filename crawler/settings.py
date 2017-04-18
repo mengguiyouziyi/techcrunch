@@ -31,7 +31,7 @@ ROBOTSTXT_OBEY = False
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 1  # 间隔时间,两次下载的间隔
+# DOWNLOAD_DELAY = 1  # 间隔时间,两次下载的间隔
 # RANDOMIZE_DOWNLOAD_DELAY = True  # 开启随机延迟
 
 USER_AGENT_CHOICES = [
@@ -49,7 +49,7 @@ LOG_STDOUT = True
 
 LOG_LEVEL = 'INFO'
 
-RETRY_ENABLED: True
-RETRY_TIMES: 3
-RETRY_HTTP_CODECS: [500, 502, 503, 504, 400, 408]
+# RETRY_ENABLED: True
+# RETRY_TIMES: 3
+# RETRY_HTTP_CODECS: [500, 502, 503, 504, 400, 408]
 # DOWNLOAD_TIMEOUT = 15
