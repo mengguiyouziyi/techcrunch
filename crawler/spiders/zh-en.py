@@ -100,7 +100,7 @@ class FazSpider(CrawlSpider):
             # 如果返回错误状态码，记录
             print('%d 》》》状态码错误，记录 》》》%s' % (index, url_zh))
             with codecs.open('wrong_status1.txt', 'ab', 'utf-8') as file:
-                file.writelines(str(index) + '）status code：%s 》》》' % str(status_code) + url_zh + '\n')
+                file.writelines(str(index) + '---status code：%s 》》》' % str(status_code) + url_zh + '\n')
             with codecs.open('wrong_status2.txt', 'ab', 'utf-8') as file:
                 file.writelines(url_zh + '\n')
 
